@@ -1,0 +1,5 @@
+common_lib.audit.SharedAuditAutoConfiguration
+common_lib.config.SharedKafkaAutoConfiguration
+common_lib.exceptions.SharedExceptionAutoConfiguration
+common_lib.idempotency.SharedResilienceAutoConfiguration
+common_lib.util.SharedSecurityAutoConfiguration
