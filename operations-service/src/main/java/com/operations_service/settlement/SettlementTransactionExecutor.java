@@ -13,6 +13,7 @@ import common_lib.dto.PaymentSettlementView;
 import common_lib.dto.SettlementBankDetails;
 import common_lib.entity.Money;
 import common_lib.enums.EventAggregateType;
+import common_lib.enums.PaymentEvent;
 import common_lib.enums.SettlementStatus;
 import common_lib.exceptions.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -139,14 +140,13 @@ public class SettlementTransactionExecutor {
             settlement.setSettledAt(Instant.now());
             settlementRepository.save(settlement);
 
-            /* Marking payments against the above settlement as SETTLED */
-//            for (SettlementPayment settlementPayment : settlementPaymentRepository
-//                    .findAllBySettlementPaymentId_SettlementId(settlementId)) {
-//                UUID paymentId = settlementPayment.getSettlementPaymentId().getPaymentId();
-//                Payment payment = paymentRepository.findByIdForUpdate(paymentId)
-//                        .orElseThrow(() -> new ResourceNotFoundException("PAYMENT", paymentId));
-//                paymentTransitionService.apply(payment, PaymentEvent.SETTLE);
-//            }
+            /* Marking all payments for the above settlement as SETTLED */
+            List<SettlementPayment> settlementPayments = settlementPaymentRepository.
+                    findAllBySettlementPaymentId_SettlementId(settlementId);
+            List<UUID> paymentIds = settlementPayments.stream().map(settlementPayment ->
+                    settlementPayment.getSettlementPaymentId().getPaymentId()).toList();
+            paymentServiceClient.markSettled(paymentIds);
+
             log.info("Settlement settled successfully, settlement id : {}", settlementId);
             outboxEventPublisher.publish(EventAggregateType.SETTLEMENT, settlementId,
                     "SETTLEMENT_PROCESSED", Map.of(
