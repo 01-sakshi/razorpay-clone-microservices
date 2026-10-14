@@ -1,0 +1,15 @@
+package com.payment_service.client;
+
+import common_lib.dto.FindOrCreateCustomerRequest;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
+import java.util.UUID;
+
+@FeignClient(name = "customer-service", path = "/internals/customers")
+public interface CustomerServiceClient {
+
+    @PostMapping("/find-or-create")
+    UUID findOrCreate(@RequestBody FindOrCreateCustomerRequest findOrCreateCustomerRequest);
+}

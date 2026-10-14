@@ -1,4 +1,4 @@
-package com.payment_gateway.razorpay.common.dto;
+package common_lib.dto;
 
 /**
  * Holds the merchant bank details used for settlement processing.

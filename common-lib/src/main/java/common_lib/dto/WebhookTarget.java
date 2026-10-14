@@ -1,4 +1,4 @@
-package com.payment_gateway.razorpay.common.dto;
+package common_lib.dto;
 
 import java.util.UUID;
 
