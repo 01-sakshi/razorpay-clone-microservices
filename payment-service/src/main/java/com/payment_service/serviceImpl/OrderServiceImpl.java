@@ -41,7 +41,7 @@ public class OrderServiceImpl implements OrderService {
     private final OutboxEventPublisher eventPublisher;
     private final CustomerServiceClient customerServiceClient;
 
-    @Value("${payment.order.default-order-expiry-seconds}")
+    @Value("${payment.order.default-order-expiry-seconds:30}")
     private int defaultOrderExpirySeconds;
 
     /**

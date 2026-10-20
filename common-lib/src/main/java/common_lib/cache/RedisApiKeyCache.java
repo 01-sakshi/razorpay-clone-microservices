@@ -1,4 +1,4 @@
-package com.merchant_service.cache;
+package common_lib.cache;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -9,7 +9,6 @@ import tools.jackson.databind.ObjectMapper;
 import java.time.Duration;
 import java.util.Optional;
 
-@Component
 @RequiredArgsConstructor
 @Slf4j
 public class RedisApiKeyCache implements ApiKeyCache {

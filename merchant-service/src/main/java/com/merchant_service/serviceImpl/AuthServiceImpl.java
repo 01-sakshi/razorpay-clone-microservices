@@ -13,13 +13,11 @@ import com.merchant_service.security.JwtUtil;
 import com.merchant_service.service.AuthService;
 import common_lib.constants.ErrorCode;
 import common_lib.enums.UserRole;
+import common_lib.exceptions.BusinessRuleViolationException;
 import common_lib.exceptions.DuplicateResourceException;
 import common_lib.exceptions.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,7 +31,6 @@ public class AuthServiceImpl implements AuthService {
     private final AppUserRepository appUserRepository;
     private final MerchantMapper merchantMapper;
     private final PasswordEncoder passwordEncoder;  //Bean definition in WebSecurityConfig
-    private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
 
     /**
@@ -73,12 +70,13 @@ public class AuthServiceImpl implements AuthService {
      */
     @Override
     public LoginResponse login(LoginRequest loginRequest) {
-        Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-                loginRequest.email(), loginRequest.password()));
-
         AppUser appUser = appUserRepository.findByEmail(loginRequest.email())
                 .orElseThrow(() -> new ResourceNotFoundException("APP_USER", loginRequest.email()));
 
+        if (!passwordEncoder.matches(loginRequest.password(), appUser.getPasswordHash())) {
+            throw new BusinessRuleViolationException("INVALID_PASSWORD",
+                    "Password is incorrect", "USER", loginRequest.password());
+        }
         String jwtToken = jwtUtil.generateAccessToken(loginRequest.email(),
                 appUser.getMerchant().getId(), appUser.getRole().name());
         return new LoginResponse(jwtToken);

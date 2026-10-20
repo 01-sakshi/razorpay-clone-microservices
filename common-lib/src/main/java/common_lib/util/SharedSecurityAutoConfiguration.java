@@ -31,10 +31,20 @@ public class SharedSecurityAutoConfiguration {
      *
      * @return a non-null encryptor that encrypts and decrypts protected bytes with AES-GCM
      */
+    // This bean will only be created in the service where vault.master-key property is available.
     @Bean
     @ConditionalOnProperty(name = "vault.master-key")
     public BytesEncryptor masterKeyEncryptor(@Value("${vault.master-key}") String masterKey) {
         byte[] masterKeyBytes = Base64.getDecoder().decode(masterKey);
+        SecretKeySpec decKey = new SecretKeySpec(masterKeyBytes, "AES");   //Use masterKeyBytes to encrypt using AES algo
+        return new AesBytesEncryptor(decKey,
+                KeyGenerators.secureRandom(12), AesBytesEncryptor.CipherAlgorithm.GCM);
+    }
+
+    @Bean
+    @ConditionalOnProperty(name = "webhoook.secret-encryption-key")
+    public BytesEncryptor webhookSecretEncryptor(@Value("${webhoook.secret-encryption-key}") String secretKey) {
+        byte[] masterKeyBytes = Base64.getDecoder().decode(secretKey);
         SecretKeySpec decKey = new SecretKeySpec(masterKeyBytes, "AES");   //Use masterKeyBytes to encrypt using AES algo
         return new AesBytesEncryptor(decKey,
                 KeyGenerators.secureRandom(12), AesBytesEncryptor.CipherAlgorithm.GCM);

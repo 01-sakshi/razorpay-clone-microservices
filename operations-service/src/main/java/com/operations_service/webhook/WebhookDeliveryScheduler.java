@@ -45,7 +45,7 @@ public class WebhookDeliveryScheduler {
     private int batchSize;
 
     /** Polls up to the configured batch size of due IDs every five seconds and submits each delivery independently. */
-    @Scheduled(fixedDelay = 5000)
+//    @Scheduled(fixedDelay = 5000)
     public void pollAndDeliver() {
         Set<UUID> pollDue = retryQueue.pollDue(batchSize);
         if (pollDue == null || pollDue.isEmpty()) {
@@ -59,7 +59,7 @@ public class WebhookDeliveryScheduler {
     }
 
     /** Repairs missed Redis queue entries every ten seconds from due database rows marked {@code PENDING}. */
-    @Scheduled(fixedDelay = 10000)
+//    @Scheduled(fixedDelay = 10000)
     public void reconcileFromDatabase() {
         List<WebhookEvent> events = webhookEventRepository
                 .findByEventStatusAndNextRetryAtBefore(WebhookEventStatus.PENDING, Instant.now());

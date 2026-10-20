@@ -1,20 +1,28 @@
 package common_lib.idempotency;
 
+import common_lib.cache.RedisApiKeyCache;
 import common_lib.context.MerchantContext;
 import common_lib.ratelimit.RateLimiter;
 import common_lib.ratelimit.ratelimiterImpl.FixedWindowRateLimiter;
 import common_lib.ratelimit.ratelimiterImpl.SlidingWindowLuaScripter;
 import common_lib.ratelimit.ratelimiterImpl.SlidingWindowRateLimiter;
 import common_lib.ratelimit.ratelimiterImpl.TokenBucketRateLimiter;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.servlet.HandlerExceptionResolver;
+import tools.jackson.databind.ObjectMapper;
 
-@Configuration
+@AutoConfiguration
 public class SharedResilienceAutoConfiguration {
+
+    @Bean
+    public RedisApiKeyCache redisApiKeyCache(StringRedisTemplate stringRedisTemplate,
+                                             ObjectMapper objectMapper) {
+        return new RedisApiKeyCache(stringRedisTemplate, objectMapper);
+    }
 
     /* All the beans dependent on StringRedisTemplate are put in this config file */
 

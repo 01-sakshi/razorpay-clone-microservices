@@ -14,7 +14,7 @@ import javax.crypto.spec.SecretKeySpec;
 @Configuration
 public class VaultServiceConfig {
 
-    @Value("${vault.service.master-key}")
+    @Value("${vault.master-key}")
     private String masterKey;
 
 

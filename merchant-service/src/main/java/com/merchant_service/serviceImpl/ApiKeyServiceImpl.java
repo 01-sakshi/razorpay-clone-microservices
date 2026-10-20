@@ -1,6 +1,6 @@
 package com.merchant_service.serviceImpl;
 
-import com.merchant_service.cache.ApiKeyCache;
+import common_lib.cache.ApiKeyCache;
 import com.merchant_service.dto.request.CreateApiKeyRequest;
 import com.merchant_service.dto.response.ApiKeyCreateResponse;
 import com.merchant_service.dto.response.ApiKeyResponse;

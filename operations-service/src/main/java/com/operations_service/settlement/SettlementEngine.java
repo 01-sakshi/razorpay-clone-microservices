@@ -28,7 +28,7 @@ public class SettlementEngine {
      * Invokes the all-merchant settlement batch at 23:00 server-local time each
      * day.
      */
-    @Scheduled(cron = "*/30 * * * * *") // for testing, every 30 seconds
+//    @Scheduled(cron = "*/30 * * * * *") // for testing, every 30 seconds
     // @Scheduled(cron = "0 0 23 * * *")
     public void runScheduled() {
         log.info("Nightly settlement scheduler running");

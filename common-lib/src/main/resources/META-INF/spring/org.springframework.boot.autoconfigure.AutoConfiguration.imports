@@ -3,3 +3,5 @@ common_lib.config.SharedKafkaAutoConfiguration
 common_lib.exceptions.SharedExceptionAutoConfiguration
 common_lib.idempotency.SharedResilienceAutoConfiguration
 common_lib.util.SharedSecurityAutoConfiguration
+common_lib.web.SharedWebFilterAutoConfiguration
+common_lib.web.SharedMerchantContextFilterAutoConfiguration

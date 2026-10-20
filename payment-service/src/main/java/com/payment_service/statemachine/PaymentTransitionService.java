@@ -3,6 +3,7 @@ package com.payment_service.statemachine;
 import com.payment_service.entity.Payment;
 import com.payment_service.entity.PaymentTransitionLog;
 import com.payment_service.repository.PaymentTransitionLogRepository;
+import common_lib.context.MerchantContext;
 import common_lib.enums.PaymentActor;
 import common_lib.enums.PaymentEvent;
 import common_lib.enums.PaymentStatus;
@@ -20,6 +21,7 @@ public class PaymentTransitionService {
 
     private final PaymentTransitionLogRepository paymentTransitionLogRepository;
     private final PaymentStateMachine paymentStateMachine;
+    private final MerchantContext merchantContext;
 
     /**
      * Validates the event against the state machine, changes the in-memory payment status, and persists a system-actor

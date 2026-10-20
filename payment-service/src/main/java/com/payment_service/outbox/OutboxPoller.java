@@ -31,7 +31,7 @@ public class OutboxPoller {
      * Polls pending events oldest-first, wraps each payload, and waits up to five seconds for its Kafka send;
      * successful sends are marked published, while failures increment the persisted retry count.
      */
-    @Scheduled(fixedDelay = 5000)
+//    @Scheduled(fixedDelay = 5000)
     public void poll() {
         List<OutboxEvent> pendingEvents = outboxEventRepository.findByStatusOrderByCreatedAtAsc(OutboxStatus.PENDING);
         for (OutboxEvent event : pendingEvents) {

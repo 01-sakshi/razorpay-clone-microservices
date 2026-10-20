@@ -1,4 +1,4 @@
-package com.merchant_service.cache;
+package common_lib.cache;
 
 import java.util.Optional;
 

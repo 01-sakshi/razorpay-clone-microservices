@@ -46,7 +46,10 @@ public class WebhookKafkaConsumer {
             "${app.kafka.topics.order:order.events}",
             "${app.kafka.topics.refund:refund.events}",
             "${app.kafka.topics.settlement:settlement.events}"
-    })
+        }, properties = {
+            "spring.json.value.default.type=java.util.HashMap",
+            "spring.json.trusted.packages=java.util,java.lang"
+        })
     public void listenOnWebhookEvent(ConsumerRecord<String, Map<String, Object>> consumerRecord,
                                      Acknowledgment acknowledgment) {
         try {

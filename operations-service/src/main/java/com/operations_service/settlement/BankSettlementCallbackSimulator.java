@@ -20,7 +20,7 @@ public class BankSettlementCallbackSimulator {
     private final SettlementTransactionExecutor settlementTransactionExecutor;
 
     /** Finds settlements still awaiting transfer and invokes the simulator for each; an empty batch is a no-op. */
-    @Scheduled(fixedDelay = 5000)
+//    @Scheduled(fixedDelay = 5000)
     public void processCallbacks() {
         List<Settlement> settlements = settlementRepository.findByStatus(SettlementStatus.TRANSFER_PENDING);
         if (settlements.isEmpty())

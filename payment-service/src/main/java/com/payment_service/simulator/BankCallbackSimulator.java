@@ -27,7 +27,7 @@ public class BankCallbackSimulator {    //This is Payment Gateway's Simulated Ba
     /**
      * Polls payments left in {@code AUTHORIZING} for at least one second and evaluates their configured callbacks.
      */
-    @Scheduled(fixedDelayString = "${payment.simulator.poll-interval-ms:5000}")
+//    @Scheduled(fixedDelayString = "${payment.simulator.poll-interval-ms:5000}")
     public void processCallbacks() {
         Instant globalWindow = Instant.now().minusSeconds(1);   //Take all payments in AUTHORIZING status till (current time - 1 second)
         List<Payment> candidates = paymentRepository.findByStatusAndUpdatedAtBefore(PaymentStatus.AUTHORIZING,
