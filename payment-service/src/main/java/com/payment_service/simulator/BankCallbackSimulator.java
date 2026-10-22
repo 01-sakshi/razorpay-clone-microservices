@@ -8,6 +8,7 @@ import common_lib.enums.PaymentStatus;
 import common_lib.util.RandomizerUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -27,7 +28,8 @@ public class BankCallbackSimulator {    //This is Payment Gateway's Simulated Ba
     /**
      * Polls payments left in {@code AUTHORIZING} for at least one second and evaluates their configured callbacks.
      */
-//    @Scheduled(fixedDelayString = "${payment.simulator.poll-interval-ms:5000}")
+    @Scheduled(fixedDelayString = "${payment.simulator.poll-interval-ms:5000}")
+    @SchedulerLock(name = "payment-service-bank-callback-simulator", lockAtLeastFor = "1s", lockAtMostFor = "10s")
     public void processCallbacks() {
         Instant globalWindow = Instant.now().minusSeconds(1);   //Take all payments in AUTHORIZING status till (current time - 1 second)
         List<Payment> candidates = paymentRepository.findByStatusAndUpdatedAtBefore(PaymentStatus.AUTHORIZING,

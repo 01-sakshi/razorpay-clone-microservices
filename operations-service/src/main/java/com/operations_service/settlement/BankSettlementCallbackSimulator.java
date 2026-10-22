@@ -5,6 +5,7 @@ import java.util.List;
 import com.operations_service.entity.Settlement;
 import com.operations_service.repository.SettlementRepository;
 import common_lib.enums.SettlementStatus;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -20,7 +21,8 @@ public class BankSettlementCallbackSimulator {
     private final SettlementTransactionExecutor settlementTransactionExecutor;
 
     /** Finds settlements still awaiting transfer and invokes the simulator for each; an empty batch is a no-op. */
-//    @Scheduled(fixedDelay = 5000)
+    @Scheduled(fixedDelay = 5000)
+    @SchedulerLock(name = "operations-service-bank-callback-simulator", lockAtLeastFor = "1s", lockAtMostFor = "10s")
     public void processCallbacks() {
         List<Settlement> settlements = settlementRepository.findByStatus(SettlementStatus.TRANSFER_PENDING);
         if (settlements.isEmpty())

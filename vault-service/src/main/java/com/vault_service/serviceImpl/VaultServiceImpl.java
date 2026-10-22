@@ -9,12 +9,12 @@ import com.vault_service.processor.CardPaymentProcessor;
 import com.vault_service.repository.CardTokenRepository;
 import com.vault_service.repository.VaultCardRepository;
 import com.vault_service.service.VaultService;
+import common_lib.dto.PaymentProcessorRequest;
+import common_lib.dto.PaymentProcessorResponse;
 import common_lib.entity.Money;
 import common_lib.enums.CardBrand;
 import common_lib.exceptions.ResourceNotFoundException;
 import common_lib.util.RandomizerUtil;
-import common_lib.dto.PaymentProcessorResponse;
-import common_lib.dto.PaymentProcessorRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.encrypt.BytesEncryptor;
@@ -26,6 +26,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -96,7 +97,7 @@ public class VaultServiceImpl implements VaultService {
     @Override
     @Transactional
     public PaymentProcessorResponse charge(UUID paymentId, String token, Money amount,
-                                                          Map<String, Object> methodDetails) {
+                                           Map<String, Object> methodDetails) {
         byte[] decryptedPanBytes = null;
         try {
             CardToken cardToken = cardTokenRepository.findByTokenAndRevokedAtNull(token)
@@ -112,7 +113,8 @@ public class VaultServiceImpl implements VaultService {
             PaymentProcessorRequest paymentProcessorRequest = PaymentProcessorRequest.card(paymentId, pan, expiry,
                     amount, methodDetails);
 
-            PaymentProcessorResponse paymentProcessorResponse = cardPaymentProcessor.charge(paymentProcessorRequest);
+            PaymentProcessorResponse paymentProcessorResponse = cardPaymentProcessor.charge(paymentProcessorRequest)
+                    .get(5, TimeUnit.SECONDS);
 
             log.info("Vault charge registered, token={}****", token.substring(0, 4));
             return paymentProcessorResponse;

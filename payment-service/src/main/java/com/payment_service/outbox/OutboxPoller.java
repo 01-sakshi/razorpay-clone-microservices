@@ -6,6 +6,7 @@ import common_lib.config.KafkaProperties;
 import common_lib.enums.OutboxStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -31,7 +32,8 @@ public class OutboxPoller {
      * Polls pending events oldest-first, wraps each payload, and waits up to five seconds for its Kafka send;
      * successful sends are marked published, while failures increment the persisted retry count.
      */
-//    @Scheduled(fixedDelay = 5000)
+    @Scheduled(fixedDelay = 5000)
+    @SchedulerLock(name = "payment-service-outbox-poller", lockAtLeastFor = "1s", lockAtMostFor = "10s")
     public void poll() {
         List<OutboxEvent> pendingEvents = outboxEventRepository.findByStatusOrderByCreatedAtAsc(OutboxStatus.PENDING);
         for (OutboxEvent event : pendingEvents) {

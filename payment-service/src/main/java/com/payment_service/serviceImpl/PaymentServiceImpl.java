@@ -11,6 +11,7 @@ import com.payment_service.mapper.PaymentMapper;
 import com.payment_service.outbox.OutboxEventPublisher;
 import com.payment_service.repository.OrderRepository;
 import com.payment_service.repository.PaymentRepository;
+import com.payment_service.saga.PaymentAuthorizationRecorder;
 import com.payment_service.service.PaymentService;
 import com.payment_service.statemachine.PaymentTransitionService;
 import common_lib.enums.EventAggregateType;
@@ -39,6 +40,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final OutboxEventPublisher eventPublisher;
 
     private final PaymentTransitionService paymentTransitionService;
+    private final PaymentAuthorizationRecorder paymentAuthorizationRecorder;
 
     /**
      * Locks the merchant-owned order to serialize attempts, permits only {@code CREATED}/{@code ATTEMPTED} orders,
@@ -54,78 +56,22 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     @Transactional
     public PaymentResponse initiate(UUID merchantId, PaymentInitRequest request) {
-        // OrderRecord orderRecord =
-        // orderRepository.findByIdAndMerchant(request.orderId(), merchantId)
-        // .orElseThrow(() -> new ResourceNotFoundException("order",
-        // request.orderId()));
-
-        // To handle scenarios respect to race conditions on a single resource
-        // Pessimistic Locking: It will only block the transactions having same order
-        // and merchant ID
-        OrderRecord orderRecord = orderRepository.findByIdAndMerchantForUpdate(request.orderId(), merchantId)
-                .orElseThrow(() -> new ResourceNotFoundException("order", request.orderId()));
-
-        if (!orderRecord.getStatus().equals(OrderStatus.CREATED) &&
-                !orderRecord.getStatus().equals(OrderStatus.ATTEMPTED)) {
-            log.warn("Order is not in a payable state, orderId: {}, status: {}", request.orderId(),
-                    orderRecord.getStatus());
-            throw new BusinessRuleViolationException("ORDER_NOT_PAYABLE", "Order is not in a payable state", "ORDER",
-                    request.orderId());
+        // Orchestration SAGA Pattern is applied here
+        Payment payment = paymentAuthorizationRecorder.recordPayment(merchantId, request);
+        PaymentResult paymentResult = null;
+        try {
+            paymentResult = paymentGatewayRouter.initiate(new PaymentRequest(
+                    payment.getId(),
+                    merchantId,
+                    request.orderId(),
+                    payment.getMethod(),
+                    payment.getMethodDetails(),
+                    payment.getAmount()));
+        } catch (Exception e) {
+            paymentAuthorizationRecorder.compensateAuthorizationFailure(payment.getId(),
+                    "PAYMENT_GATEWAY_ROUTER_UNREACHABLE", e.getMessage());
         }
-
-        orderRecord.setStatus(OrderStatus.ATTEMPTED);
-        orderRecord.setAttempts(orderRecord.getAttempts() + 1); // payment attempt on this order
-
-        Payment payment = Payment
-                .builder()
-                .orderRecord(orderRecord)
-                .status(PaymentStatus.CREATED)
-                .merchantId(merchantId)
-                .amount(orderRecord.getAmount())
-                .method(request.paymentMethod())
-                .methodDetails(request.methodDetails())
-                .build();
-        payment = paymentRepository.save(payment);
-
-        paymentTransitionService.apply(payment, PaymentEvent.AUTHORIZE_ATTEMPT);
-        PaymentResult paymentResult = paymentGatewayRouter.initiate(new PaymentRequest(
-                payment.getId(),
-                merchantId,
-                request.orderId(),
-                payment.getMethod(),
-                payment.getMethodDetails(),
-                payment.getAmount()));
-
-        switch (paymentResult) {
-            case PaymentResult.Pending pending -> // record pattern
-                    payment.setProcessorReference(pending.registrationRef());
-            case PaymentResult.Failure failure -> {
-                IO.println("failure:" + failure);
-                // payment.setStatus(PaymentStatus.FAILED);
-                paymentTransitionService.apply(payment, PaymentEvent.AUTHORIZE_FAIL);
-                payment.setErrorCode(failure.errorCode());
-                payment.setErrorDescription(failure.errorDescription());
-            }
-            case PaymentResult.Success success -> {
-                // payment.setProcessorReference(success.bankReference());
-                log.warn("Invalid state");
-                return null;
-            }
-        }
-
-        payment = paymentRepository.save(payment);
-        orderRecord = orderRepository.save(orderRecord);
-
-        eventPublisher.publish(EventAggregateType.PAYMENT, payment.getId(), "PAYMENT_CREATED",
-                Map.of("orderId", orderRecord.getId(),
-                        "paymentId", payment.getId(),
-                        "merchantId", merchantId.toString(),
-                        "paymentStatus", payment.getStatus().name(),
-                        "amountUnits", orderRecord.getAmount().getAmountUnits(),
-                        "amountCurrency", orderRecord.getAmount().getCurrency(),
-                        "paymentMethod", payment.getMethod()));
-
-        return paymentMapper.toResponse(payment);
+        return paymentAuthorizationRecorder.applyGatewayResult(payment.getId(), paymentResult);
     }
 
     /**

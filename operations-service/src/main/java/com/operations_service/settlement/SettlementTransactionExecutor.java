@@ -40,8 +40,7 @@ public class SettlementTransactionExecutor {
     private final SettlementPaymentRepository settlementPaymentRepository;
     private final BankTransferProcessor bankTransferProcessor;
     private final OutboxEventPublisher outboxEventPublisher;
-    private final MerchantServiceClient merchantServiceClient;
-    private final PaymentServiceClient paymentServiceClient;
+    private final SettlementClientWrapper settlementClientWrapper;
 
     /**
      * In one transaction, groups the merchant's unsettled captured payments,
@@ -57,7 +56,7 @@ public class SettlementTransactionExecutor {
     @Transactional
     public void processForMerchant(UUID merchantId, Instant dateTime) {
         LocalDate localDate = dateTime.atZone(ZoneId.systemDefault()).toLocalDate();
-        List<PaymentSettlementView> unsettledPaymentsForMerchant = paymentServiceClient.findUnsettledCaptured(merchantId);
+        List<PaymentSettlementView> unsettledPaymentsForMerchant = settlementClientWrapper.findUnsettledCaptured(merchantId);
 
         if (unsettledPaymentsForMerchant.size() == 0)
             return;
@@ -97,7 +96,7 @@ public class SettlementTransactionExecutor {
         settlementPaymentRepository.saveAll(settlementPayments);
 
         try {
-            SettlementBankDetails settlementBankDetails = merchantServiceClient.getSettlementBankDetails(merchantId);
+            SettlementBankDetails settlementBankDetails = settlementClientWrapper.getSettlementBankDetails(merchantId);
             BankTransferResult bankTransferResult = bankTransferProcessor.initiate(settlement.getId(),
                     merchantId,
                     netAmount, settlementBankDetails);
@@ -145,7 +144,7 @@ public class SettlementTransactionExecutor {
                     findAllBySettlementPaymentId_SettlementId(settlementId);
             List<UUID> paymentIds = settlementPayments.stream().map(settlementPayment ->
                     settlementPayment.getSettlementPaymentId().getPaymentId()).toList();
-            paymentServiceClient.markSettled(paymentIds);
+            settlementClientWrapper.markSettled(paymentIds);
 
             log.info("Settlement settled successfully, settlement id : {}", settlementId);
             outboxEventPublisher.publish(EventAggregateType.SETTLEMENT, settlementId,

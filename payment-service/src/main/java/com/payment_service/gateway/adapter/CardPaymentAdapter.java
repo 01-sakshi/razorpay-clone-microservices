@@ -7,6 +7,8 @@ import com.payment_service.gateway.dto.PaymentResult;
 import common_lib.dto.PaymentProcessorResponse;
 import common_lib.constants.ErrorCode;
 import common_lib.dto.VaultChargeRequest;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -28,6 +30,8 @@ public class CardPaymentAdapter implements PaymentAdapter {
      * @return pending, success, or failure gateway result
      */
     @Override
+    @CircuitBreaker(name = "vault-service")  //The name of the circuit breaker
+    @Retry(name = "vault-service")
     public PaymentResult initiate(PaymentRequest paymentRequest) {
         log.info("Initiate Payment with CardPaymentAdapter, paymentId: {}", paymentRequest.paymentId());
         try {

@@ -10,6 +10,7 @@ import java.util.concurrent.Executors;
 import com.operations_service.entity.WebhookEvent;
 import com.operations_service.repository.WebhookEventRepository;
 import common_lib.enums.WebhookEventStatus;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -45,7 +46,8 @@ public class WebhookDeliveryScheduler {
     private int batchSize;
 
     /** Polls up to the configured batch size of due IDs every five seconds and submits each delivery independently. */
-//    @Scheduled(fixedDelay = 5000)
+    @Scheduled(fixedDelay = 5000)
+    @SchedulerLock(name = "operations-service-webhook-poll-and-deliver", lockAtLeastFor = "1s", lockAtMostFor = "10s")
     public void pollAndDeliver() {
         Set<UUID> pollDue = retryQueue.pollDue(batchSize);
         if (pollDue == null || pollDue.isEmpty()) {
@@ -59,7 +61,8 @@ public class WebhookDeliveryScheduler {
     }
 
     /** Repairs missed Redis queue entries every ten seconds from due database rows marked {@code PENDING}. */
-//    @Scheduled(fixedDelay = 10000)
+    @Scheduled(fixedDelay = 10000)
+    @SchedulerLock(name = "operations-service-webhook-reconcile", lockAtLeastFor = "1s", lockAtMostFor = "20s")
     public void reconcileFromDatabase() {
         List<WebhookEvent> events = webhookEventRepository
                 .findByEventStatusAndNextRetryAtBefore(WebhookEventStatus.PENDING, Instant.now());

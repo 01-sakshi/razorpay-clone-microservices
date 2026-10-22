@@ -10,6 +10,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import com.operations_service.client.MerchantServiceClient;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -29,7 +30,8 @@ public class SettlementEngine {
      * day.
      */
 //    @Scheduled(cron = "*/30 * * * * *") // for testing, every 30 seconds
-    // @Scheduled(cron = "0 0 23 * * *")
+     @Scheduled(cron = "0 0 23 * * *")
+     @SchedulerLock(name = "operations-service-settlement-engine", lockAtLeastFor = "1s", lockAtMostFor = "1m")
     public void runScheduled() {
         log.info("Nightly settlement scheduler running");
         run();

@@ -17,6 +17,8 @@ import common_lib.enums.OrderStatus;
 import common_lib.exceptions.BusinessRuleViolationException;
 import common_lib.exceptions.DuplicateResourceException;
 import common_lib.exceptions.ResourceNotFoundException;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -52,6 +54,8 @@ public class OrderServiceImpl implements OrderService {
      */
     @Override
     @Transactional
+    @CircuitBreaker(name = "merchant-service")
+    @Retry(name = "merchant-service")   //For retry, operation must be idempotent
     public OrderResponse create(UUID merchantId, CreateOrderRequest createOrderRequest) {
         if (createOrderRequest.receipt() != null &&
                 orderRepository.existsByReceiptAndMerchant(createOrderRequest.receipt(), merchantId))
