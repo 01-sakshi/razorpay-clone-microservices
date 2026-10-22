@@ -22,6 +22,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @Component
@@ -36,7 +37,7 @@ public class PaymentAuthorizationRecorder {
     private final PaymentMapper paymentMapper;
 
     @Transactional
-    public Payment recordPayment(UUID merchantId, PaymentInitRequest request) {
+    public Payment recordPayment(UUID merchantId, PaymentInitRequest request, String idempotencyKey) {
         // OrderRecord orderRecord =
         // orderRepository.findByIdAndMerchant(request.orderId(), merchantId)
         // .orElseThrow(() -> new ResourceNotFoundException("order",
@@ -67,10 +68,17 @@ public class PaymentAuthorizationRecorder {
                 .amount(orderRecord.getAmount())
                 .method(request.paymentMethod())
                 .methodDetails(request.methodDetails())
+                .idempotencyKey(idempotencyKey != null ? idempotencyKey : UUID.randomUUID().toString())
                 .build();
         payment = paymentRepository.save(payment);
         paymentTransitionService.apply(payment, PaymentEvent.AUTHORIZE_ATTEMPT);
         return payment;
+    }
+
+    @Transactional
+    public Optional<PaymentResponse> findExistingAttempt(UUID merchantId, String idempotencyKey) {
+        return paymentRepository.findByMerchantIdAndIdempotencyKey(merchantId, idempotencyKey)
+                .map((payment) -> paymentMapper.toResponse(payment));
     }
 
     @Transactional

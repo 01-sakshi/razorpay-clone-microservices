@@ -22,7 +22,7 @@ public interface PaymentService {
      * @throws com.payment_gateway.razorpay.common.exceptions.ResourceNotFoundException      if the order is absent or not owned by the merchant
      * @throws com.payment_gateway.razorpay.common.exceptions.BusinessRuleViolationException if the order is not payable
      */
-    PaymentResponse initiate(UUID merchantId, PaymentInitRequest request);
+    PaymentResponse initiate(UUID merchantId, PaymentInitRequest request, String idempotency);
 
     /**
      * Captures a merchant-owned payment through the configured gateway.

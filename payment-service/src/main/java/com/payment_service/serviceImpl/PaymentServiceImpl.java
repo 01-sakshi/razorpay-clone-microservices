@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -54,12 +55,21 @@ public class PaymentServiceImpl implements PaymentService {
      * @throws BusinessRuleViolationException if the order is not payable
      */
     @Override
-    @Transactional
-    public PaymentResponse initiate(UUID merchantId, PaymentInitRequest request) {
+    public PaymentResponse initiate(UUID merchantId, PaymentInitRequest request, String idempotencyKey) {
+
+        if(idempotencyKey != null) {
+            Optional<PaymentResponse> existingAttempt = paymentAuthorizationRecorder.findExistingAttempt(merchantId,
+                    idempotencyKey);
+            if(existingAttempt.isPresent()) {
+                log.info("Idempotency replay for paymentId: {}", existingAttempt.get().id());
+                return existingAttempt.get();
+            }
+        }
         // Orchestration SAGA Pattern is applied here
-        Payment payment = paymentAuthorizationRecorder.recordPayment(merchantId, request);
+        Payment payment = paymentAuthorizationRecorder.recordPayment(merchantId, request, idempotencyKey);
         PaymentResult paymentResult = null;
         try {
+            //Involves external service call
             paymentResult = paymentGatewayRouter.initiate(new PaymentRequest(
                     payment.getId(),
                     merchantId,

@@ -31,9 +31,10 @@ public class PaymentController {
      * @return HTTP 201 with the initial payment-attempt state
      */
     @PostMapping()
-    public ResponseEntity<PaymentResponse> initiate(@Valid @RequestBody PaymentInitRequest paymentInitRequest) {
+    public ResponseEntity<PaymentResponse> initiate(@Valid @RequestBody PaymentInitRequest paymentInitRequest,
+                                                    @RequestHeader(required = false, name = "X-Idempotency-Key") String idempotencyKey) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(paymentService.initiate(merchantContext.getMerchantId(), paymentInitRequest));
+                .body(paymentService.initiate(merchantContext.getMerchantId(), paymentInitRequest, idempotencyKey));
     }
 
     /**
