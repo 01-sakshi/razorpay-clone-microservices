@@ -129,7 +129,7 @@
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-circuitbreaker-resilience4j</artifactId>
 		</dependency>
-		<!-- The AOP dependency containing aspectj is removed in spring boot 4, needs to be added manually here -->
+		<!-- The AOP dependency containing aspectj is removed in spring boot 4, therefore it needs to be added manually here -->
 		<dependency>
 			<groupId>org.aspectj</groupId>
 			<artifactId>aspectjweaver</artifactId>

@@ -19,7 +19,6 @@ public class CardPaymentProcessor {
     /**
      * Returns a simulated decline for the configured decline PAN and a generated pending reference for other PANs.
      */
-    // DOUBT in BULKHEAD PATTERN
     @Bulkhead(name = "vault-card-processor", type = Bulkhead.Type.THREADPOOL)
     public CompletableFuture<PaymentProcessorResponse> charge(PaymentProcessorRequest request) {
         String pan = request.pan();
