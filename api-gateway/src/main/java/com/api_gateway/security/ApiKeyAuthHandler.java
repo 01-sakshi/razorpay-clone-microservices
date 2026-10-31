@@ -42,7 +42,7 @@ public class ApiKeyAuthHandler {
         String secretKey = decoded[1];
 
         /* Cache: First try to fetch apiKey entry from redis cache, if not found get it from database and insert in cache */
-        ApiKeyCacheEntry apiKeyEntry = apiKeyCache.get(keyId).orElse(loadAndCache(keyId));
+        ApiKeyCacheEntry apiKeyEntry = apiKeyCache.get(keyId).orElseGet(() -> loadAndCache(keyId));
         if (apiKeyEntry == null || !apiKeyEntry.enabled() || !secretMatches(secretKey, apiKeyEntry))
             throw new BadRequestException("Invalid or missing API Key");
 
