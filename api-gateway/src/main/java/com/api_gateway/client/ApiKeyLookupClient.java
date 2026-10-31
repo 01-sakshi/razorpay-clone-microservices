@@ -4,7 +4,7 @@ import common_lib.cache.ApiKeyCacheEntry;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 
-@FeignClient(name = "merchant-service", path = "/internals/api-keys")
+@FeignClient(name = "merchant-service", path = "/internals/api-keys", url = "${MERCHANT_SERVICE_URI:}")
 public interface ApiKeyLookupClient {
 
     @GetMapping("/{keyId}")

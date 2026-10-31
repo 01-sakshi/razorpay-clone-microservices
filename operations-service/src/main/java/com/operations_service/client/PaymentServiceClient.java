@@ -11,7 +11,12 @@ import java.util.List;
 import java.util.UUID;
 
 /* name should match the service name of microservice */
-@FeignClient(name = "payment-service", path = "/internal/payments")
+
+//In case of k8s environment, since discovery service won't be there, payment service's URL will have to fetched from
+//environment variable PAYMENT_SERVICE_URI. For dev environment, this variable's value will not be found, hence
+// value/url will be fetched from name field.
+
+@FeignClient(name = "payment-service", path = "/internal/payments", url = "${PAYMENT_SERVICE_URI:}")
 public interface PaymentServiceClient {
 
     @GetMapping("/unsettled/captured")

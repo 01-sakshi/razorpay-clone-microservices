@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.UUID;
 
 /* name should match the service name of microservice */
-@FeignClient(name = "merchant-service", path = "/internal/merchants")
+@FeignClient(name = "merchant-service", path = "/internal/merchants", url = "${MERCHANT_SERVICE_URI:}")
 public interface MerchantServiceClient {
 
     /* For all the places in operations service in the corresponding monolith application, wherever

@@ -10,3 +10,51 @@ spring:
       default-label: main
 
 server.port: 8888
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  health:
+    config:
+      enabled: false
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411/api/v2/spans
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+---
+# --- indicates end of configs for the default profile, anything put after this line will be
+# considered separately(here for k8s profile).
+
+spring:
+  config:
+    activate:
+      on-profile: k8s
+# spring.cloud.discovery.enabled : false is to disable spring cloud's service discovery
+  cloud:
+    discovery:
+      enabled: false
+    config.server.git:
+      uri: ${GIT_CONFIG_REPO}
+      username: ${GIT_USERNAME}
+      password: ${GIT_PASSWORD}
+
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
+
+management:
+  zipkin:
+    tracing:
+      endpoint: http://zipkin.razorpay-core.svc.cluster.local:9411/api/v2/spans
+# here, namespace: razorpay-core, svc.cluster.local : static fields required by k8s
+# namespace: logical partition of the k8s cluster based on environment(dev/test/prod)

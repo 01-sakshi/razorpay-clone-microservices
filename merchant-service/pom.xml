@@ -180,6 +180,31 @@
                     </execution>
                 </executions>
             </plugin>
+            <!-- Purpose of jib-maven-plugin : To build a docker image of the spring boot application without requiring to
+             write a dockerfile or manually run docker commands -->
+            <plugin>
+                <groupId>com.google.cloud.tools</groupId>
+                <artifactId>jib-maven-plugin</artifactId>
+                <version>3.5.2</version>
+                <configuration>
+                    <to>
+                        <!-- Nomenclature for docker images -->
+                        <image>docker.io/sakshi0108/razorpay-${project.artifactId}:${project.version}</image>
+                        <tags>
+                            <tag>latest</tag>
+                        </tags>
+                    </to>
+                </configuration>
+                <executions>
+                    <execution>
+                        <!-- When mvn package command is executed, this image will be built and added to docker registry -->
+                        <phase>package</phase>
+                        <goals>
+                            <goal>build</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
